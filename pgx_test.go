@@ -11,8 +11,7 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-//const connStr = "postgres://testuser:testuser@192.168.1.20:5432/testdb"
-const connStr = "postgres://byzmlmbu:TLzV3mOtDNL4jyy-YyoZRz6i3G-1cVs_@tantor.db.elephantsql.com:5432/byzmlmbu"
+const connStr = "postgres://testuser:testuser@192.168.1.20:5432/testdb"
 
 var pgxconn *pgx.Conn
 
