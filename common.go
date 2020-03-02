@@ -32,3 +32,15 @@ func parseTimeString(s string) (time.Time, error) {
 		return time.ParseInLocation(timestampFormat, s, time.UTC)
 	}
 }
+
+func toString(t interface{}) (string, bool) {
+	value, ok := t.(string)
+	if ok {
+		return value, true
+	}
+	if val, ok := t.([]byte); ok {
+		return string(val), true
+	}
+	// return default value
+	return "", false
+}

@@ -5,38 +5,55 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/jackc/pgtype"
+	"github.com/pkg/errors"
 )
 
-type NullInt64 pgtype.Int8
-
-func (p *NullInt64) Scan(src interface{}) error {
-	t := pgtype.Int8(*p)
-	err := t.Scan(src)
-	*p = NullInt64(t)
-	return err
+type NullInt64 struct {
+	Int   int64
+	Valid bool
 }
 
-func (p NullInt64) Value() (driver.Value, error) {
-	return pgtype.Int8(p).Value()
+// Scan implements the database/sql Scanner interface.
+func (dst *NullInt64) Scan(src interface{}) error {
+	if src == nil {
+		*dst = NullInt64{Valid: false}
+		return nil
+	}
+
+	switch src := src.(type) {
+	case int64:
+		*dst = NullInt64{Int: src, Valid: true}
+		return nil
+	case string:
+		return dst.FromString(src)
+	case []byte:
+		// srcCopy := make([]byte, len(src))
+		// copy(srcCopy, src)
+		return dst.FromString(string(src))
+	}
+
+	return errors.Errorf("cannot scan %T", src)
+}
+
+func (src NullInt64) Value() (driver.Value, error) {
+	switch src.Valid {
+	case true:
+		return src.Int, nil
+	default:
+		return nil, nil
+	}
 }
 
 //MarshalJSON convert field value to JSON
 func (src NullInt64) MarshalJSON() ([]byte, error) {
 	//fmt.Printf("Marshaling NullInt64: %d\n", src.Status)
 
-	switch src.Status {
-	case pgtype.Present:
-		//return []byte(strconv.FormatInt(src.Int, 10)), nil
-		return json.Marshal(strconv.FormatInt(src.Int, 10))
-	case pgtype.Null:
-		return []byte("0"), nil
-	case pgtype.Undefined:
+	switch src.Valid {
+	case true:
+		return []byte(strconv.FormatInt(src.Int, 10)), nil
+	default:
 		return []byte("0"), nil
 	}
-
-	//fmt.Println("NullInt64 is nil")
-	return nil, errBadStatus
 }
 
 //UnmarshalJSON parse JSON valus and set into field
@@ -48,10 +65,26 @@ func (dst *NullInt64) UnmarshalJSON(b []byte) error {
 	}
 
 	if v == nil {
-		*dst = NullInt64{Status: pgtype.Null}
+		*dst = NullInt64{Valid: false}
 	} else {
-		*dst = NullInt64{Int: *v, Status: pgtype.Present}
+		*dst = NullInt64{Int: *v, Valid: true}
 	}
 
+	return nil
+}
+
+func (dst *NullInt64) FromString(src string) error {
+	if src == "" {
+		*dst = NullInt64{Valid: false}
+		return nil
+	}
+
+	n, err := strconv.ParseInt(src, 10, 64)
+	if err != nil {
+		*dst = NullInt64{Valid: false}
+		return err
+	}
+
+	*dst = NullInt64{Int: n, Valid: true}
 	return nil
 }

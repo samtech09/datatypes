@@ -5,38 +5,56 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/jackc/pgtype"
+	"github.com/pkg/errors"
 )
 
-type NullFloat32 pgtype.Float4
-
-func (p *NullFloat32) Scan(src interface{}) error {
-	t := pgtype.Float4(*p)
-	err := t.Scan(src)
-	*p = NullFloat32(t)
-	return err
+type NullFloat32 struct {
+	Float float32
+	Valid bool
 }
 
-func (p NullFloat32) Value() (driver.Value, error) {
-	return pgtype.Float4(p).Value()
+// Scan implements the database/sql Scanner interface.
+func (dst *NullFloat32) Scan(src interface{}) error {
+	if src == nil {
+		*dst = NullFloat32{Valid: false}
+		return nil
+	}
+
+	switch src := src.(type) {
+	case float64:
+		*dst = NullFloat32{Float: float32(src), Valid: true}
+		return nil
+	case string:
+		return dst.FromString(src)
+	case []byte:
+		// srcCopy := make([]byte, len(src))
+		// copy(srcCopy, src)
+		return dst.FromString(string(src))
+	}
+
+	return errors.Errorf("cannot scan %T", src)
+}
+
+// Value implements the database/sql/driver Valuer interface.
+func (src NullFloat32) Value() (driver.Value, error) {
+	switch src.Valid {
+	case true:
+		return float64(src.Float), nil
+	default:
+		return nil, nil
+	}
 }
 
 //MarshalJSON convert field value to JSON
 func (src NullFloat32) MarshalJSON() ([]byte, error) {
-	//fmt.Printf("Marshaling NullFloat32: %d\n", src.Status)
+	//fmt.Printf("Marshaling NullFloat32: %d\n", src.Valid)
 
-	switch src.Status {
-	case pgtype.Present:
+	switch src.Valid {
+	case true:
 		return []byte(strconv.FormatFloat(float64(src.Float), 'f', -1, 64)), nil
-		//return json.Marshal(strconv.FormatFloat(float64(src.Float), 'f', -1, 64))
-	case pgtype.Null:
-		return []byte("0"), nil
-	case pgtype.Undefined:
+	default:
 		return []byte("0"), nil
 	}
-
-	//fmt.Println("NullFloat32 is nil")
-	return nil, errBadStatus
 }
 
 //UnmarshalJSON parse JSON valus and set into field
@@ -48,10 +66,26 @@ func (dst *NullFloat32) UnmarshalJSON(b []byte) error {
 	}
 
 	if v == nil {
-		*dst = NullFloat32{Status: pgtype.Null}
+		*dst = NullFloat32{}
 	} else {
-		*dst = NullFloat32{Float: *v, Status: pgtype.Present}
+		*dst = NullFloat32{Float: *v, Valid: true}
 	}
 
+	return nil
+}
+
+func (dst *NullFloat32) FromString(src string) error {
+	if src == "" {
+		*dst = NullFloat32{}
+		return nil
+	}
+
+	n, err := strconv.ParseFloat(src, 32)
+	if err != nil {
+		*dst = NullFloat32{}
+		return err
+	}
+
+	*dst = NullFloat32{Float: float32(n), Valid: true}
 	return nil
 }

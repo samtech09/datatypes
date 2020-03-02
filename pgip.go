@@ -5,32 +5,49 @@ import (
 	"encoding/json"
 	"net"
 
-	"github.com/jackc/pgtype"
+	"github.com/pkg/errors"
 )
 
-type IPAddr pgtype.Inet
+type IPAddr struct {
+	IPNet *net.IPNet
+	Valid bool
+}
 
-func (p *IPAddr) Scan(src interface{}) error {
-	inet := pgtype.Inet(*p)
-	err := inet.Scan(src)
-	*p = IPAddr(inet)
-	return err
+func (dst *IPAddr) Scan(src interface{}) error {
+	if src == nil {
+		*dst = IPAddr{Valid: false}
+		return nil
+	}
+
+	switch src := src.(type) {
+	case string:
+		return dst.FromText(src)
+	case []byte:
+		// srcCopy := make([]byte, len(src))
+		// copy(srcCopy, src)
+		return dst.FromText(string(src))
+	}
+
+	return errors.Errorf("cannot scan %T", src)
 }
 
 func (p IPAddr) Value() (driver.Value, error) {
-	return pgtype.Inet(p).Value()
+	if p.Valid {
+		return p.IPNet.IP.String(), nil
+	}
+	return nil, nil
 }
 
 //MarshalJSON convert field value to JSON
-func (p IPAddr) MarshalJSON() ([]byte, error) {
-	if p.Status == pgtype.Present {
-		return json.Marshal(p.IPNet.IP.String())
+func (src IPAddr) MarshalJSON() ([]byte, error) {
+	if src.Valid {
+		return json.Marshal(src.IPNet.IP.String())
 	}
 	return json.Marshal("")
 }
 
 //UnmarshalJSON parse JSON valus and set into field
-func (p *IPAddr) UnmarshalJSON(b []byte) (err error) {
+func (dst *IPAddr) UnmarshalJSON(b []byte) (err error) {
 	if b[0] == '"' && b[len(b)-1] == '"' {
 		b = b[1 : len(b)-1]
 	}
@@ -39,10 +56,39 @@ func (p *IPAddr) UnmarshalJSON(b []byte) (err error) {
 	msk := net.IPv4Mask(255, 255, 255, 0)
 	if ip != nil {
 		ipnet := net.IPNet{IP: ip, Mask: msk}
-		*p = IPAddr{IPNet: &ipnet, Status: pgtype.Present}
+		*dst = IPAddr{IPNet: &ipnet, Valid: true}
 		return nil
 	}
 
-	*p = IPAddr{IPNet: nil, Status: pgtype.Null}
+	*dst = IPAddr{IPNet: nil, Valid: false}
+	return nil
+}
+
+func (dst *IPAddr) FromText(src string) error {
+	if src == "" {
+		*dst = IPAddr{Valid: false}
+		return nil
+	}
+
+	var ipnet *net.IPNet
+	var err error
+
+	if ip := net.ParseIP(src); ip != nil {
+		ipv4 := ip.To4()
+		if ipv4 != nil {
+			ip = ipv4
+		}
+		bitCount := len(ip) * 8
+		mask := net.CIDRMask(bitCount, bitCount)
+		ipnet = &net.IPNet{Mask: mask, IP: ip}
+	} else {
+		_, ipnet, err = net.ParseCIDR(src)
+		if err != nil {
+			*dst = IPAddr{Valid: false}
+			return err
+		}
+	}
+
+	*dst = IPAddr{IPNet: ipnet, Valid: true}
 	return nil
 }

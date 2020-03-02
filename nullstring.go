@@ -3,52 +3,55 @@ package datatypes
 import (
 	"database/sql/driver"
 	"encoding/json"
-
-	"github.com/jackc/pgtype"
 )
 
-type NullString pgtype.Text
-
-func (p *NullString) Scan(src interface{}) error {
-	t := pgtype.Text(*p)
-	err := t.Scan(src)
-	*p = NullString(t)
-	return err
+// NullString to scan nil string values from database
+type NullString struct {
+	String string
+	Valid  bool // Valid is true if string is not NULL
 }
 
-func (p NullString) Value() (driver.Value, error) {
-	return pgtype.Text(p).Value()
-}
-
-//MarshalJSON convert field value to JSON
-func (src NullString) MarshalJSON() ([]byte, error) {
-	//fmt.Printf("Marshaling NullString: %d\n", src.Status)
-
-	switch src.Status {
-	case pgtype.Present:
-		return json.Marshal(src.String)
-	case pgtype.Null:
-		return json.Marshal("")
-	case pgtype.Undefined:
-		return json.Marshal("")
+// Scan implements the Scanner interface.
+func (ns *NullString) Scan(value interface{}) error {
+	if value == nil {
+		ns.String, ns.Valid = "", false
+		return nil
 	}
-
-	//fmt.Println("NullString is nil")
-	return nil, errBadStatus
+	ns.String, ns.Valid = toString(value)
+	return nil
 }
 
-//UnmarshalJSON parse JSON valus and set into field
-func (dst *NullString) UnmarshalJSON(b []byte) error {
-	var s *string
-	err := json.Unmarshal(b, &s)
-	if err != nil {
+// Value implements the driver Valuer interface.
+func (ns NullString) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return ns.String, nil
+}
+
+// MarshalJSON implements json.Marshaler.
+// It will encode null if this String is null.
+func (ns NullString) MarshalJSON() ([]byte, error) {
+	if !ns.Valid {
+		ns.String = ""
+	}
+	return json.Marshal(ns.String)
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+// It supports string and null input. Blank string input does not produce a null String.
+// It also supports unmarshalling a sql.NullString.
+func (ns *NullString) UnmarshalJSON(data []byte) error {
+	var err error
+	var v *string
+	if err = json.Unmarshal(data, &v); err != nil {
 		return err
 	}
 
-	if s == nil {
-		*dst = NullString{Status: pgtype.Null}
+	if v == nil {
+		*ns = NullString{"", false}
 	} else {
-		*dst = NullString{String: *s, Status: pgtype.Present}
+		*ns = NullString{*v, true}
 	}
 
 	return nil

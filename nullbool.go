@@ -4,37 +4,43 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 
-	"github.com/jackc/pgtype"
+	"github.com/pkg/errors"
 )
 
-type NullBool pgtype.Bool
+type NullBool bool
 
-func (p *NullBool) Scan(src interface{}) error {
-	t := pgtype.Bool(*p)
-	err := t.Scan(src)
-	*p = NullBool(t)
-	return err
+func (dst *NullBool) Scan(src interface{}) error {
+	if src == nil {
+		*dst = false
+		return nil
+	}
+
+	switch src := src.(type) {
+	case bool:
+		*dst = NullBool(src)
+		return nil
+	case string:
+		return dst.FromString(src)
+	case []byte:
+		return dst.FromString(string(src))
+	}
+
+	return errors.Errorf("cannot scan %T", src)
 }
 
-func (p NullBool) Value() (driver.Value, error) {
-	return pgtype.Bool(p).Value()
+func (src NullBool) Value() (driver.Value, error) {
+	if src {
+		return true, nil
+	}
+	return false, nil
 }
 
 //MarshalJSON convert field value to JSON
 func (src NullBool) MarshalJSON() ([]byte, error) {
-	switch src.Status {
-	case pgtype.Present:
-		if src.Bool {
-			return []byte("true"), nil
-		}
-		return []byte("false"), nil
-	case pgtype.Null:
-		return []byte("false"), nil
-	case pgtype.Undefined:
-		return []byte("false"), nil
+	if src {
+		return []byte("true"), nil
 	}
-
-	return nil, errBadStatus
+	return []byte("false"), nil
 }
 
 //UnmarshalJSON parse JSON valus and set into field
@@ -46,10 +52,25 @@ func (dst *NullBool) UnmarshalJSON(b []byte) error {
 	}
 
 	if v == nil {
-		*dst = NullBool{Status: pgtype.Null}
+		*dst = NullBool(false)
 	} else {
-		*dst = NullBool{Bool: *v, Status: pgtype.Present}
+		*dst = NullBool(*v)
 	}
 
+	return nil
+}
+
+func (dst *NullBool) FromString(src string) error {
+	if src == "" {
+		*dst = false
+		return nil
+	}
+
+	if len(src) != 1 {
+		*dst = false
+		return errors.Errorf("invalid length for bool: %v", len(src))
+	}
+
+	*dst = NullBool(src[0] == 't')
 	return nil
 }

@@ -99,7 +99,7 @@ func (nt UnixTime) MarshalJSON() ([]byte, error) {
 	//fmt.Printf("Marshaling UnixTime: %v\n", nt.Valid)
 
 	if nt.Valid {
-		fmt.Printf("UnixTime Value: %d\n", nt.Utime)
+		//fmt.Printf("UnixTime Value: %d\n", nt.Utime)
 
 		//return json.Marshal(nt.Time.Format(time.RFC3339))
 
