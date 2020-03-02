@@ -4,7 +4,6 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -102,12 +101,13 @@ func (nt UnixTime) MarshalJSON() ([]byte, error) {
 		//fmt.Printf("UnixTime Value: %d\n", nt.Utime)
 
 		//return json.Marshal(nt.Time.Format(time.RFC3339))
+		return json.Marshal(time.Unix(nt.Utime, 0).UTC().Format(time.RFC3339))
 
 		// Note:
 		// Zone 'Z' is retuned only for UTC time
 		// for local time it returns + e.g. 2006-01-02T15:04:05+07:00
 		// To fix it, replace + with Z
-		return json.Marshal(strings.Replace(time.Unix(nt.Utime, 0).Format(time.RFC3339), "+", "Z", -1))
+		//return json.Marshal(strings.Replace(time.Unix(nt.Utime, 0).Format(time.RFC3339), "+", "Z", -1))
 	}
 
 	return json.Marshal(time.Time{}.Format(time.RFC3339))
