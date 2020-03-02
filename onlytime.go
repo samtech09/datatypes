@@ -26,7 +26,7 @@ func (ot *OnlyTime) Scan(value interface{}) error {
 		return nil
 	}
 
-	fmt.Println("value: ", value)
+	//fmt.Println("value: ", value)
 
 	if v, ok := value.(time.Time); ok {
 		*ot = OnlyTime(v)
