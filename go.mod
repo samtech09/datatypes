@@ -8,4 +8,5 @@ require (
 	github.com/lib/pq v1.2.0
 	github.com/pkg/errors v0.8.1
 	golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7
+	google.golang.org/appengine v1.6.5 // indirect
 )
