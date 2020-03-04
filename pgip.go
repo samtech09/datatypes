@@ -48,6 +48,11 @@ func (src IPAddr) MarshalJSON() ([]byte, error) {
 
 //UnmarshalJSON parse JSON valus and set into field
 func (dst *IPAddr) UnmarshalJSON(b []byte) (err error) {
+	if string(b) == "null" {
+		*dst = IPAddr{IPNet: nil, Valid: false}
+		return nil
+	}
+
 	if b[0] == '"' && b[len(b)-1] == '"' {
 		b = b[1 : len(b)-1]
 	}

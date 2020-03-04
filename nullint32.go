@@ -65,6 +65,11 @@ func (src NullInt32) MarshalJSON() ([]byte, error) {
 
 //UnmarshalJSON parse JSON valus and set into field
 func (dst *NullInt32) UnmarshalJSON(b []byte) error {
+	if string(b) == "null" {
+		// donot raise error as nil is valid type
+		return nil
+	}
+
 	var v *int32
 	err := json.Unmarshal(b, &v)
 	if err != nil {
