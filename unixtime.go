@@ -130,7 +130,13 @@ func (nt *UnixTime) UnmarshalJSON(b []byte) (err error) {
 	// nt.Valid = true
 	// nt.Utime = tmpTime.Unix()
 
-	t, err := parseTimeString(string(b))
+	s := string(b)
+	if s == "null" {
+		// donot raise error as nil is valid type
+		return nil
+	}
+
+	t, err := parseTimeString(s)
 	if err == nil {
 		nt.Valid = true
 		nt.Utime = t.Unix()

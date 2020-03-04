@@ -139,6 +139,17 @@ func TestWithNullValuesPgx(t *testing.T) {
 	fmt.Printf("JSON: %#v\n", toJSON(row).String())
 }
 
+func TestJsonBind(t *testing.T) {
+	fmt.Println("\n\nTestJsonBind ***")
+
+	jsonstr := `{"ID":1,"Name":"sam","Dob":null}`
+	var dtest DataTest
+	if err := json.Unmarshal([]byte(jsonstr), &dtest); err != nil {
+		t.Error(err)
+	}
+	fmt.Printf("struct: %#v\n", dtest)
+}
+
 func TestClosePgx(t *testing.T) {
 	pgxconn.Close(context.Background())
 }

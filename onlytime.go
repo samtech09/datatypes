@@ -63,7 +63,14 @@ func (ot *OnlyTime) UnmarshalJSON(b []byte) (err error) {
 	if b[0] == '"' && b[len(b)-1] == '"' {
 		b = b[1 : len(b)-1]
 	}
-	tmpTime, err := time.Parse(time.RFC3339, string(b))
+
+	s := string(b)
+	if s == "null" {
+		// donot raise error as nil is valid type
+		return nil
+	}
+
+	tmpTime, err := time.Parse(time.RFC3339, s)
 	*ot = OnlyTime(tmpTime)
 	return
 }
@@ -71,10 +78,11 @@ func (ot *OnlyTime) UnmarshalJSON(b []byte) (err error) {
 func (ot *OnlyTime) parseTime(src []byte) error {
 	var t time.Time
 	var err error
+	s := string(src)
 	if len(src) > 9 {
-		t, err = time.Parse("15:04:05.999999999", string(src))
+		t, err = time.Parse("15:04:05.999999999", s)
 	} else {
-		t, err = time.Parse("15:04:05", string(src))
+		t, err = time.Parse("15:04:05", s)
 	}
 	if err != nil {
 		return err

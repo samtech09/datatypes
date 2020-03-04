@@ -2,11 +2,9 @@ package datatypes
 
 import (
 	"time"
-
-	errors "golang.org/x/xerrors"
 )
 
-var errBadStatus = errors.New("invalid status")
+//var errBadStatus = errors.New("invalid status")
 
 //taken from go-pg/types/time.go, Credit to go-pg for this time-parsing function
 func parseTimeString(s string) (time.Time, error) {

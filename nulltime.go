@@ -75,7 +75,14 @@ func (nt *NullTime) UnmarshalJSON(b []byte) (err error) {
 	if b[0] == '"' && b[len(b)-1] == '"' {
 		b = b[1 : len(b)-1]
 	}
-	tmpTime, err := time.Parse(time.RFC3339, string(b))
+
+	s := string(b)
+	if s == "null" {
+		// donot raise error as nil is valid type
+		return nil
+	}
+
+	tmpTime, err := time.Parse(time.RFC3339, s)
 	if err != nil {
 		*nt = NullTime{Time: time.Time{}}
 	} else {
