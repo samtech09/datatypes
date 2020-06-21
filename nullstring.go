@@ -56,3 +56,8 @@ func (ns *NullString) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
+
+func (ns *NullString) SetValue(val string) {
+	ns.String = val
+	ns.Valid = (val != "")
+}

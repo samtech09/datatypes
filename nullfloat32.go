@@ -94,3 +94,8 @@ func (dst *NullFloat32) FromString(src string) error {
 	*dst = NullFloat32{Float: float32(n), Valid: true}
 	return nil
 }
+
+func (ns *NullFloat32) SetValue(val float32) {
+	ns.Float = val
+	ns.Valid = (val != 0)
+}

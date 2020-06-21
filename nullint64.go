@@ -93,3 +93,8 @@ func (dst *NullInt64) FromString(src string) error {
 	*dst = NullInt64{Int: n, Valid: true}
 	return nil
 }
+
+func (ns *NullInt64) SetValue(val int64) {
+	ns.Int = val
+	ns.Valid = (val != 0)
+}

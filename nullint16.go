@@ -100,3 +100,8 @@ func (dst *NullInt16) FromString(src string) error {
 	*dst = NullInt16{Int: int16(n), Valid: true}
 	return nil
 }
+
+func (ns *NullInt16) SetValue(val int16) {
+	ns.Int = val
+	ns.Valid = (val != 0)
+}

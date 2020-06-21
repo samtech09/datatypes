@@ -90,3 +90,8 @@ func (nt *NullTime) UnmarshalJSON(b []byte) (err error) {
 	}
 	return err
 }
+
+func (ns *NullTime) SetValue(val time.Time) {
+	ns.Time = val
+	ns.Valid = !val.IsZero()
+}
