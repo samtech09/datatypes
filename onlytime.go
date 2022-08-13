@@ -70,8 +70,11 @@ func (ot *OnlyTime) UnmarshalJSON(b []byte) (err error) {
 		return nil
 	}
 
-	tmpTime, err := time.Parse(time.RFC3339, s)
-	*ot = OnlyTime(tmpTime)
+	ot.parseTime(b)
+	// if err != nil {
+	// 	tmpTime, _ := time.Parse(time.RFC3339, s)
+	// 	*ot = OnlyTime(tmpTime)
+	// }
 	return
 }
 
@@ -79,7 +82,9 @@ func (ot *OnlyTime) parseTime(src []byte) error {
 	var t time.Time
 	var err error
 	s := string(src)
-	if len(src) > 9 {
+	if len(src) > 19 {
+		t, err = time.Parse(time.RFC3339, s)
+	} else if len(src) > 9 {
 		t, err = time.Parse("15:04:05.999999999", s)
 	} else {
 		t, err = time.Parse("15:04:05", s)
