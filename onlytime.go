@@ -55,7 +55,8 @@ func (ot *OnlyTime) String() string {
 //MarshalJSON convert field value to JSON
 func (ot OnlyTime) MarshalJSON() ([]byte, error) {
 	//RFC3339 = 2006-01-02T15:04:05Z07:00
-	return json.Marshal(time.Time(ot).Format(time.RFC3339))
+	//return json.Marshal(time.Time(ot).Format(time.RFC3339))
+	return json.Marshal(time.Time(ot).Format("15:04:05"))
 }
 
 //UnmarshalJSON parse JSON valus and set into field

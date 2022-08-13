@@ -21,3 +21,15 @@ func TestUnmarshalOnlyTime(t *testing.T) {
 	}
 	fmt.Printf("struct: %#v\n", dtest)
 }
+
+//
+func TestUnmarshalOnlyTime2(t *testing.T) {
+	fmt.Println("\n\nTestJsonBind ***")
+
+	jsonstr := `{"id":1,"otime":"2022-08-20T15:00:00.000Z"}`
+	var dtest TestStruct
+	if err := json.Unmarshal([]byte(jsonstr), &dtest); err != nil {
+		t.Error(err)
+	}
+	fmt.Printf("struct: %#v\n", dtest)
+}
