@@ -99,3 +99,10 @@ func (ns *NullFloat64) SetValue(val float64) {
 	ns.Float = val
 	ns.Valid = (val != 0)
 }
+
+func NewNullFloat64(val float64) NullFloat64 {
+	ns := NullFloat64{}
+	ns.Float = val
+	ns.Valid = (val != 0)
+	return ns
+}

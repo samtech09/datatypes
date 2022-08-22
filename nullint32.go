@@ -105,3 +105,10 @@ func (ns *NullInt32) SetValue(val int32) {
 	ns.Int = val
 	ns.Valid = (val != 0)
 }
+
+func NewNullInt32(val int) NullInt32 {
+	ns := NullInt32{}
+	ns.Int = int32(val)
+	ns.Valid = (val != 0)
+	return ns
+}

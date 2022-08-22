@@ -61,3 +61,10 @@ func (ns *NullString) SetValue(val string) {
 	ns.String = val
 	ns.Valid = (val != "")
 }
+
+func NewNullString(val string) NullString {
+	ns := NullString{}
+	ns.String = val
+	ns.Valid = (val != "")
+	return ns
+}

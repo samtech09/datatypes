@@ -95,3 +95,10 @@ func (ns *NullTime) SetValue(val time.Time) {
 	ns.Time = val
 	ns.Valid = !val.IsZero()
 }
+
+func NewNullTime(val time.Time) NullTime {
+	ns := NullTime{}
+	ns.Time = val
+	ns.Valid = !val.IsZero()
+	return ns
+}

@@ -105,3 +105,10 @@ func (ns *NullInt16) SetValue(val int16) {
 	ns.Int = val
 	ns.Valid = (val != 0)
 }
+
+func NewNullInt16(val int16) NullInt16 {
+	ns := NullInt16{}
+	ns.Int = val
+	ns.Valid = (val != 0)
+	return ns
+}

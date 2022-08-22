@@ -98,3 +98,10 @@ func (ns *NullInt64) SetValue(val int64) {
 	ns.Int = val
 	ns.Valid = (val != 0)
 }
+
+func NewNullInt64(val int64) NullInt64 {
+	ns := NullInt64{}
+	ns.Int = val
+	ns.Valid = (val != 0)
+	return ns
+}
